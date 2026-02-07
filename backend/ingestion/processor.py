@@ -1,7 +1,7 @@
 import uuid
 from langchain_core.documents import Document
 from rag.chunking import chunk_documents
-from vectorstore.chroma import get_vectorstore
+from vectorstore.chroma import get_vectorstore, reset_vectorstore_cache
 
 
 def process_documents(docs: list[Document], doc_id: str) -> int:
@@ -15,5 +15,6 @@ def process_documents(docs: list[Document], doc_id: str) -> int:
 
     vectorstore = get_vectorstore()
     vectorstore.add_documents(chunks)
+    reset_vectorstore_cache()
 
     return len(chunks)

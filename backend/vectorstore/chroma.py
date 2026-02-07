@@ -3,13 +3,23 @@ from langchain_community.vectorstores import Chroma
 from providers.factory import get_embeddings
 from config import settings
 
+_cached_vectorstore = None
+
 
 def get_vectorstore() -> Chroma:
-    return Chroma(
-        collection_name="advancedrag",
-        embedding_function=get_embeddings(),
-        persist_directory=settings.chroma_persist_dir,
-    )
+    global _cached_vectorstore
+    if _cached_vectorstore is None:
+        _cached_vectorstore = Chroma(
+            collection_name="advancedrag",
+            embedding_function=get_embeddings(),
+            persist_directory=settings.chroma_persist_dir,
+        )
+    return _cached_vectorstore
+
+
+def reset_vectorstore_cache():
+    global _cached_vectorstore
+    _cached_vectorstore = None
 
 
 def delete_document_vectors(doc_id: str):
@@ -18,3 +28,4 @@ def delete_document_vectors(doc_id: str):
     results = collection.get(where={"doc_id": doc_id})
     if results["ids"]:
         collection.delete(ids=results["ids"])
+    reset_vectorstore_cache()

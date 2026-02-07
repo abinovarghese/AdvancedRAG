@@ -10,6 +10,15 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     openai_embedding_model: str = "text-embedding-3-small"
 
+    # Groq
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.1-8b-instant"
+
+    # Google Gemini
+    google_api_key: str = ""
+    gemini_model: str = "gemini-2.0-flash"
+    gemini_embedding_model: str = "models/embedding-001"
+
     # WatsonX
     watsonx_api_key: str = ""
     watsonx_project_id: str = ""
@@ -25,7 +34,7 @@ class Settings(BaseSettings):
     chunk_size: int = 1000
     chunk_overlap: int = 200
     retrieval_top_k: int = 10
-    rerank_top_k: int = 5
+    rerank_top_k: int = 8
     bm25_weight: float = 0.4
     vector_weight: float = 0.6
 

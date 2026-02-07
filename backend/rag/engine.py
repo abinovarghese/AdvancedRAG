@@ -1,50 +1,44 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from providers.factory import get_llm, get_streaming_llm
-from rag.retrieval import multi_query_retrieve, hyde_retrieve, get_hybrid_retriever
-from rag.reranking import rerank_documents
-from rag.postprocessing import remove_redundant, reorder_long_context
+from vectorstore.chroma import get_vectorstore
 from rag.prompts import RAG_PROMPT
 from models.schemas import Source
+from config import settings
 
 
 class RAGEngine:
+    def _fast_retrieve(self, question: str):
+        """Simple vector similarity search — fast."""
+        vectorstore = get_vectorstore()
+        return vectorstore.similarity_search_with_relevance_scores(
+            question, k=settings.rerank_top_k
+        )
+
     def query(self, question: str, use_hyde: bool = False) -> tuple[str, list[Source]]:
         llm = get_llm()
 
-        # Retrieval
-        docs = multi_query_retrieve(question, llm)
+        results = self._fast_retrieve(question)
 
-        if use_hyde:
-            hyde_docs = hyde_retrieve(question, llm)
-            seen = {d.page_content[:200] for d in docs}
-            for d in hyde_docs:
-                if d.page_content[:200] not in seen:
-                    docs.append(d)
-                    seen.add(d.page_content[:200])
-
-        # Postprocessing
-        docs = remove_redundant(docs)
-        docs = reorder_long_context(docs)
-
-        # Reranking
-        docs = rerank_documents(question, docs)
-
-        if not docs:
+        if not results:
             return "I don't have enough context to answer this question. Please upload relevant documents first.", []
 
-        # Build context
+        docs = [doc for doc, score in results]
+        scores = [score for doc, score in results]
+
+        # Attach scores to metadata
+        for doc, score in zip(docs, scores):
+            doc.metadata["relevance_score"] = score
+
         context = "\n\n---\n\n".join(
             f"[Source: {doc.metadata.get('source_file', 'unknown')}]\n{doc.page_content}"
             for doc in docs
         )
 
-        # Generate
         prompt = ChatPromptTemplate.from_template(RAG_PROMPT)
         chain = prompt | llm | StrOutputParser()
         answer = chain.invoke({"context": context, "question": question})
 
-        # Build sources
         sources = [
             Source(
                 doc_name=doc.metadata.get("source_file", "unknown"),
@@ -58,28 +52,20 @@ class RAGEngine:
         return answer, sources
 
     async def stream_query(self, question: str, use_hyde: bool = False):
-        llm = get_llm()
         streaming_llm = get_streaming_llm()
 
-        # Retrieval
-        docs = multi_query_retrieve(question, llm)
+        results = self._fast_retrieve(question)
 
-        if use_hyde:
-            hyde_docs = hyde_retrieve(question, llm)
-            seen = {d.page_content[:200] for d in docs}
-            for d in hyde_docs:
-                if d.page_content[:200] not in seen:
-                    docs.append(d)
-                    seen.add(d.page_content[:200])
-
-        docs = remove_redundant(docs)
-        docs = reorder_long_context(docs)
-        docs = rerank_documents(question, docs)
-
-        if not docs:
-            yield {"type": "token", "content": "I don't have enough context to answer this question."}
+        if not results:
+            yield {"type": "token", "content": "I don't have enough context to answer this question. Please upload relevant documents first."}
             yield {"type": "sources", "sources": []}
             return
+
+        docs = [doc for doc, score in results]
+        scores = [score for doc, score in results]
+
+        for doc, score in zip(docs, scores):
+            doc.metadata["relevance_score"] = score
 
         context = "\n\n---\n\n".join(
             f"[Source: {doc.metadata.get('source_file', 'unknown')}]\n{doc.page_content}"

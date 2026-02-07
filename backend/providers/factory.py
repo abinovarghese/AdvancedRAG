@@ -1,11 +1,15 @@
 from providers.base import LLMProvider, EmbeddingProvider
 from providers.openai_provider import OpenAILLMProvider, OpenAIEmbeddingProvider
 from providers.watsonx_provider import WatsonxLLMProvider, WatsonxEmbeddingProvider
+from providers.gemini_provider import GeminiLLMProvider, GeminiEmbeddingProvider
+from providers.groq_provider import GroqLLMProvider, GroqEmbeddingProvider
 from config import settings
 
 _PROVIDERS = {
     "openai": (OpenAILLMProvider, OpenAIEmbeddingProvider),
     "watsonx": (WatsonxLLMProvider, WatsonxEmbeddingProvider),
+    "gemini": (GeminiLLMProvider, GeminiEmbeddingProvider),
+    "groq": (GroqLLMProvider, GroqEmbeddingProvider),
 }
 
 

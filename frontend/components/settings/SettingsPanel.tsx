@@ -13,14 +13,25 @@ interface Props {
 
 export default function SettingsPanel({ open, onClose }: Props) {
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [apiKey, setApiKey] = useState("");
-  const [watsonxKey, setWatsonxKey] = useState("");
-  const [watsonxProject, setWatsonxProject] = useState("");
+  const [keys, setKeys] = useState({
+    openai_api_key: "",
+    groq_api_key: "",
+    google_api_key: "",
+    watsonx_api_key: "",
+    watsonx_project_id: "",
+  });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
       getSettings().then(setSettings).catch(console.error);
+      setKeys({
+        openai_api_key: "",
+        groq_api_key: "",
+        google_api_key: "",
+        watsonx_api_key: "",
+        watsonx_project_id: "",
+      });
     }
   }, [open]);
 
@@ -31,9 +42,9 @@ export default function SettingsPanel({ open, onClose }: Props) {
     setSaving(true);
     try {
       const update: Record<string, any> = { ...settings };
-      if (apiKey) update.openai_api_key = apiKey;
-      if (watsonxKey) update.watsonx_api_key = watsonxKey;
-      if (watsonxProject) update.watsonx_project_id = watsonxProject;
+      Object.entries(keys).forEach(([k, v]) => {
+        if (v) update[k] = v;
+      });
       const updated = await updateSettings(update);
       setSettings(updated);
       onClose();
@@ -43,6 +54,8 @@ export default function SettingsPanel({ open, onClose }: Props) {
       setSaving(false);
     }
   };
+
+  const provider = settings?.llm_provider || "groq";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -70,124 +83,160 @@ export default function SettingsPanel({ open, onClose }: Props) {
                 }
                 className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
               >
+                <option value="groq">Groq (Free - Llama 3.1)</option>
                 <option value="openai">OpenAI</option>
+                <option value="gemini">Google Gemini</option>
                 <option value="watsonx">WatsonX</option>
               </select>
             </div>
 
-            {/* OpenAI key */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">OpenAI API Key</label>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-..."
-                className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
-              />
-            </div>
+            {/* Provider-specific keys */}
+            {provider === "groq" && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Groq API Key</label>
+                <input
+                  type="password"
+                  value={keys.groq_api_key}
+                  onChange={(e) =>
+                    setKeys({ ...keys, groq_api_key: e.target.value })
+                  }
+                  placeholder="gsk_..."
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Free at console.groq.com/keys
+                </p>
+              </div>
+            )}
 
-            {/* WatsonX keys */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">WatsonX API Key</label>
-              <input
-                type="password"
-                value={watsonxKey}
-                onChange={(e) => setWatsonxKey(e.target.value)}
-                placeholder="WatsonX API key"
-                className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
-              />
-            </div>
+            {provider === "openai" && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">OpenAI API Key</label>
+                <input
+                  type="password"
+                  value={keys.openai_api_key}
+                  onChange={(e) =>
+                    setKeys({ ...keys, openai_api_key: e.target.value })
+                  }
+                  placeholder="sk-..."
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
+                />
+              </div>
+            )}
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">WatsonX Project ID</label>
-              <input
-                value={watsonxProject}
-                onChange={(e) => setWatsonxProject(e.target.value)}
-                placeholder="Project ID"
-                className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
-              />
-            </div>
+            {provider === "gemini" && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Google API Key</label>
+                <input
+                  type="password"
+                  value={keys.google_api_key}
+                  onChange={(e) =>
+                    setKeys({ ...keys, google_api_key: e.target.value })
+                  }
+                  placeholder="AIza..."
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Free at aistudio.google.com/apikey
+                </p>
+              </div>
+            )}
+
+            {provider === "watsonx" && (
+              <>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">WatsonX API Key</label>
+                  <input
+                    type="password"
+                    value={keys.watsonx_api_key}
+                    onChange={(e) =>
+                      setKeys({ ...keys, watsonx_api_key: e.target.value })
+                    }
+                    placeholder="WatsonX API key"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">
+                    WatsonX Project ID
+                  </label>
+                  <input
+                    value={keys.watsonx_project_id}
+                    onChange={(e) =>
+                      setKeys({ ...keys, watsonx_project_id: e.target.value })
+                    }
+                    placeholder="Project ID"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
+                  />
+                </div>
+              </>
+            )}
 
             {/* RAG params */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Chunk Size</label>
-                <input
-                  type="number"
-                  value={settings.chunk_size}
-                  onChange={(e) =>
-                    setSettings({ ...settings, chunk_size: +e.target.value })
-                  }
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Chunk Overlap</label>
-                <input
-                  type="number"
-                  value={settings.chunk_overlap}
-                  onChange={(e) =>
-                    setSettings({ ...settings, chunk_overlap: +e.target.value })
-                  }
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Retrieval Top K</label>
-                <input
-                  type="number"
-                  value={settings.retrieval_top_k}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      retrieval_top_k: +e.target.value,
-                    })
-                  }
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Rerank Top K</label>
-                <input
-                  type="number"
-                  value={settings.rerank_top_k}
-                  onChange={(e) =>
-                    setSettings({ ...settings, rerank_top_k: +e.target.value })
-                  }
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">BM25 Weight</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1"
-                  value={settings.bm25_weight}
-                  onChange={(e) =>
-                    setSettings({ ...settings, bm25_weight: +e.target.value })
-                  }
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Vector Weight</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1"
-                  value={settings.vector_weight}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      vector_weight: +e.target.value,
-                    })
-                  }
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
-                />
+            <div className="pt-2 border-t border-border">
+              <p className="text-sm font-medium mb-3">RAG Parameters</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">
+                    Chunk Size
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.chunk_size}
+                    onChange={(e) =>
+                      setSettings({ ...settings, chunk_size: +e.target.value })
+                    }
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">
+                    Chunk Overlap
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.chunk_overlap}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        chunk_overlap: +e.target.value,
+                      })
+                    }
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">
+                    Retrieval Top K
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.retrieval_top_k}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        retrieval_top_k: +e.target.value,
+                      })
+                    }
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">
+                    Results Top K
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.rerank_top_k}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        rerank_top_k: +e.target.value,
+                      })
+                    }
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
+                  />
+                </div>
               </div>
             </div>
 

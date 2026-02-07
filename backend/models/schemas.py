@@ -77,6 +77,8 @@ class SettingsOut(BaseModel):
 class SettingsUpdate(BaseModel):
     llm_provider: Optional[str] = None
     openai_api_key: Optional[str] = None
+    groq_api_key: Optional[str] = None
+    google_api_key: Optional[str] = None
     watsonx_api_key: Optional[str] = None
     watsonx_project_id: Optional[str] = None
     watsonx_url: Optional[str] = None
