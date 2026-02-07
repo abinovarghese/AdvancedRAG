@@ -10,8 +10,7 @@ export function useWebSocket() {
     (
       conversationId: string,
       message: string,
-      onEvent: (event: StreamEvent) => void,
-      useHyde = false
+      onEvent: (event: StreamEvent) => void
     ) => {
       return new Promise<void>((resolve, reject) => {
         const ws = new WebSocket(
@@ -20,7 +19,7 @@ export function useWebSocket() {
         wsRef.current = ws;
 
         ws.onopen = () => {
-          ws.send(JSON.stringify({ message, use_hyde: useHyde }));
+          ws.send(JSON.stringify({ message }));
         };
 
         ws.onmessage = (event) => {

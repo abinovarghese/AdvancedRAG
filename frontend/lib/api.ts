@@ -24,15 +24,13 @@ async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
 // Chat
 export async function sendMessage(
   message: string,
-  conversationId?: string,
-  useHyde = false
+  conversationId?: string
 ): Promise<ChatResponse> {
   return fetchJSON("/api/chat", {
     method: "POST",
     body: JSON.stringify({
       message,
       conversation_id: conversationId,
-      use_hyde: useHyde,
     }),
   });
 }

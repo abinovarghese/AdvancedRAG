@@ -27,9 +27,10 @@ async def chat(request: ChatRequest):
             "INSERT INTO messages (id, conversation_id, role, content, created_at) VALUES (?, ?, ?, ?, ?)",
             (user_msg_id, conversation_id, "user", request.message, datetime.utcnow().isoformat()),
         )
+        await db.commit()
 
-        # Run RAG
-        answer, sources = rag_engine.query(request.message, use_hyde=request.use_hyde)
+        # Run RAG with conversation context
+        answer, sources = await rag_engine.query(request.message, conversation_id=conversation_id)
 
         # Save assistant message
         assistant_msg_id = str(uuid.uuid4())

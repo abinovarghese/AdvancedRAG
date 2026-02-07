@@ -66,7 +66,6 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
         while True:
             data = await websocket.receive_json()
             question = data.get("message", "")
-            use_hyde = data.get("use_hyde", False)
 
             async with aiosqlite.connect(DB_PATH) as db:
                 user_msg_id = str(uuid.uuid4())
@@ -79,7 +78,7 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
             full_response = ""
             sources_data = []
 
-            async for event in rag_engine.stream_query(question, use_hyde=use_hyde):
+            async for event in rag_engine.stream_query(question, conversation_id=conversation_id):
                 if event["type"] == "token":
                     full_response += event["content"]
                     await websocket.send_json(event)

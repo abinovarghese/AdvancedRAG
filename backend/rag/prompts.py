@@ -9,6 +9,15 @@ Do not say "I don't know". Write a plausible answer even if you're unsure.
 Question: {question}
 Passage:"""
 
+CONDENSE_QUESTION_PROMPT = """Given the following conversation history and a follow-up question, rephrase the follow-up question to be a standalone question that captures the full context.
+
+Chat History:
+{chat_history}
+
+Follow-up Question: {question}
+
+Standalone Question:"""
+
 RAG_PROMPT = """You are a knowledgeable assistant. Use the following context to provide a detailed, comprehensive answer to the question.
 
 Instructions:
@@ -18,7 +27,7 @@ Instructions:
 - If the context covers multiple aspects of the question, address all of them
 - Cite the source documents you used
 - If the context is insufficient, say what you can answer and what is missing
-
+{chat_history_block}
 Context:
 {context}
 

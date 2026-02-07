@@ -7,7 +7,6 @@ from enum import Enum
 class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None
-    use_hyde: bool = False
 
 
 class Source(BaseModel):
