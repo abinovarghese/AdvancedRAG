@@ -1,4 +1,4 @@
-# Advanced RAG
+# RAG Forge
 
 A production-grade, full-stack Retrieval-Augmented Generation application with a Next.js frontend, FastAPI backend, multi-provider LLM support, and advanced retrieval techniques.
 

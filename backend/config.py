@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # Storage
     chroma_persist_dir: str = "./chromadb"
-    sqlite_db_path: str = "./data/advancedrag.db"
+    sqlite_db_path: str = "./data/ragforge.db"
 
     # RAG
     chunk_size: int = 1000

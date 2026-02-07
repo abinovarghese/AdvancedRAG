@@ -10,7 +10,7 @@ def get_vectorstore() -> Chroma:
     global _cached_vectorstore
     if _cached_vectorstore is None:
         _cached_vectorstore = Chroma(
-            collection_name="advancedrag",
+            collection_name="ragforge",
             embedding_function=get_embeddings(),
             persist_directory=settings.chroma_persist_dir,
         )
@@ -24,7 +24,7 @@ def reset_vectorstore_cache():
 
 def delete_document_vectors(doc_id: str):
     client = chromadb.PersistentClient(path=settings.chroma_persist_dir)
-    collection = client.get_or_create_collection("advancedrag")
+    collection = client.get_or_create_collection("ragforge")
     results = collection.get(where={"doc_id": doc_id})
     if results["ids"]:
         collection.delete(ids=results["ids"])
