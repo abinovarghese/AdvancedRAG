@@ -30,7 +30,29 @@ export interface Document {
   file_type: string;
   file_size: number | null;
   chunk_count: number | null;
+  status: string;
+  source_type: string;
+  error_message: string | null;
+  source_url: string | null;
+  progress: number;
   created_at: string;
+}
+
+export interface Connector {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  document_count: number;
+  last_synced: string | null;
+  created_at: string;
+}
+
+export interface IngestionEvent {
+  stage: string;
+  progress: number;
+  detail?: string;
+  error?: string;
 }
 
 export interface Settings {

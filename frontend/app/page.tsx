@@ -2,20 +2,17 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { FileText, Settings, BrainCircuit } from "lucide-react";
-import type { Conversation, Message, Document, Source } from "@/types";
+import type { Conversation, Message, Source } from "@/types";
 import {
   listConversations,
   createConversation,
   getConversation,
   deleteConversation,
-  listDocuments,
-  deleteDocument,
 } from "@/lib/api";
 import { useWebSocket } from "@/lib/websocket";
 import Sidebar from "@/components/sidebar/Sidebar";
 import ChatPanel from "@/components/chat/ChatPanel";
-import DocumentUpload from "@/components/documents/DocumentUpload";
-import DocumentList from "@/components/documents/DocumentList";
+import DataSourcesPanel from "@/components/documents/DataSourcesPanel";
 import SettingsPanel from "@/components/settings/SettingsPanel";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
@@ -25,7 +22,6 @@ export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [documents, setDocuments] = useState<Document[]>([]);
   const [panel, setPanel] = useState<Panel>("chat");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -37,7 +33,6 @@ export default function Home() {
   // Load initial data
   useEffect(() => {
     listConversations().then(setConversations).catch(console.error);
-    listDocuments().then(setDocuments).catch(console.error);
   }, []);
 
   // Load conversation messages when active changes
@@ -53,10 +48,6 @@ export default function Home() {
 
   const refreshConversations = useCallback(() => {
     listConversations().then(setConversations).catch(console.error);
-  }, []);
-
-  const refreshDocuments = useCallback(() => {
-    listDocuments().then(setDocuments).catch(console.error);
   }, []);
 
   const handleNewChat = useCallback(async () => {
@@ -77,14 +68,6 @@ export default function Home() {
       }
     },
     [activeConvId]
-  );
-
-  const handleDeleteDoc = useCallback(
-    async (id: string) => {
-      await deleteDocument(id);
-      refreshDocuments();
-    },
-    [refreshDocuments]
   );
 
   const handleSend = useCallback(
@@ -153,7 +136,7 @@ export default function Home() {
       <header className="h-14 border-b border-border flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-2">
           <BrainCircuit size={24} className="text-primary" />
-          <span className="font-bold text-lg">Advanced RAG</span>
+          <span className="font-bold text-lg">RAG Forge</span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -202,11 +185,7 @@ export default function Home() {
               streamingContent={streamingContent}
             />
           ) : (
-            <div className="p-6 max-w-2xl mx-auto space-y-6 overflow-y-auto h-full">
-              <h2 className="text-lg font-semibold">Documents</h2>
-              <DocumentUpload onUploaded={refreshDocuments} />
-              <DocumentList documents={documents} onDelete={handleDeleteDoc} />
-            </div>
+            <DataSourcesPanel />
           )}
         </main>
       </div>

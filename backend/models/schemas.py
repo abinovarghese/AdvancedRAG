@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from enum import Enum
 
 
 class ChatRequest(BaseModel):
@@ -28,11 +29,45 @@ class DocumentOut(BaseModel):
     file_type: str
     file_size: Optional[int]
     chunk_count: Optional[int]
+    status: str = "completed"
+    source_type: str = "file"
+    error_message: Optional[str] = None
+    source_url: Optional[str] = None
+    progress: int = 100
     created_at: str
 
 
 class URLIngestRequest(BaseModel):
     url: str
+
+
+class IngestionEvent(BaseModel):
+    stage: str
+    progress: int
+    detail: Optional[str] = None
+    error: Optional[str] = None
+
+
+class ConnectorType(str, Enum):
+    chroma_remote = "chroma_remote"
+    pinecone = "pinecone"
+    weaviate = "weaviate"
+
+
+class ConnectorCreate(BaseModel):
+    name: str
+    type: ConnectorType
+    config: dict
+
+
+class ConnectorOut(BaseModel):
+    id: str
+    name: str
+    type: str
+    status: str
+    document_count: int
+    last_synced: Optional[str] = None
+    created_at: str
 
 
 class ConversationOut(BaseModel):

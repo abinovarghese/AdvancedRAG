@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import aiosqlite
 from database import init_db, DB_PATH
 from rag.engine import rag_engine
-from routers import chat, documents, conversations, settings
+from routers import chat, documents, conversations, settings, connectors
+from ingestion.processor import get_progress_channel, remove_progress_channel
 
 
 @asynccontextmanager
@@ -16,7 +17,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Advanced RAG API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="RAG Forge API", version="2.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,11 +31,32 @@ app.include_router(chat.router, prefix="/api", tags=["Chat"])
 app.include_router(documents.router, prefix="/api", tags=["Documents"])
 app.include_router(conversations.router, prefix="/api", tags=["Conversations"])
 app.include_router(settings.router, prefix="/api", tags=["Settings"])
+app.include_router(connectors.router, prefix="/api", tags=["Connectors"])
 
 
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.websocket("/ws/ingest/{doc_id}")
+async def websocket_ingest(websocket: WebSocket, doc_id: str):
+    await websocket.accept()
+    queue = get_progress_channel(doc_id)
+    try:
+        while True:
+            event = await queue.get()
+            if event is None:
+                break
+            await websocket.send_json(event)
+    except WebSocketDisconnect:
+        pass
+    finally:
+        remove_progress_channel(doc_id)
+        try:
+            await websocket.close()
+        except Exception:
+            pass
 
 
 @app.websocket("/ws/chat/{conversation_id}")

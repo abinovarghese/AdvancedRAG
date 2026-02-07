@@ -1,6 +1,7 @@
 import type {
   Conversation,
   ConversationDetail,
+  Connector,
   Document,
   Settings,
   ChatResponse,
@@ -61,6 +62,42 @@ export async function listDocuments(): Promise<Document[]> {
 
 export async function deleteDocument(id: string): Promise<void> {
   await fetchJSON(`/api/documents/${id}`, { method: "DELETE" });
+}
+
+export async function getDocumentStatus(
+  id: string
+): Promise<{ status: string; progress: number; error_message: string | null }> {
+  return fetchJSON(`/api/documents/${id}/status`);
+}
+
+// Connectors
+export async function listConnectors(): Promise<Connector[]> {
+  return fetchJSON("/api/connectors");
+}
+
+export async function createConnector(data: {
+  name: string;
+  type: string;
+  config: Record<string, string>;
+}): Promise<Connector> {
+  return fetchJSON("/api/connectors", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function testConnector(
+  id: string
+): Promise<{ ok: boolean; message: string }> {
+  return fetchJSON(`/api/connectors/${id}/test`, { method: "POST" });
+}
+
+export async function syncConnector(id: string): Promise<void> {
+  await fetchJSON(`/api/connectors/${id}/sync`, { method: "POST" });
+}
+
+export async function deleteConnector(id: string): Promise<void> {
+  await fetchJSON(`/api/connectors/${id}`, { method: "DELETE" });
 }
 
 // Conversations

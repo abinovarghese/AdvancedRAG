@@ -12,6 +12,22 @@ CREATE TABLE IF NOT EXISTS documents (
     file_type TEXT NOT NULL,
     file_size INTEGER,
     chunk_count INTEGER,
+    status TEXT DEFAULT 'completed',
+    source_type TEXT DEFAULT 'file',
+    error_message TEXT,
+    source_url TEXT,
+    progress INTEGER DEFAULT 100,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS connectors (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    config TEXT NOT NULL,
+    status TEXT DEFAULT 'disconnected',
+    document_count INTEGER DEFAULT 0,
+    last_synced TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -33,11 +49,26 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 """
 
+# Columns to add to existing documents table (safe migration)
+_DOCUMENTS_MIGRATIONS = [
+    ("status", "TEXT DEFAULT 'completed'"),
+    ("source_type", "TEXT DEFAULT 'file'"),
+    ("error_message", "TEXT"),
+    ("source_url", "TEXT"),
+    ("progress", "INTEGER DEFAULT 100"),
+]
+
 
 async def init_db():
     Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
     async with aiosqlite.connect(DB_PATH) as db:
         await db.executescript(SCHEMA)
+        # Safe column additions for existing DBs
+        for col_name, col_def in _DOCUMENTS_MIGRATIONS:
+            try:
+                await db.execute(f"ALTER TABLE documents ADD COLUMN {col_name} {col_def}")
+            except Exception:
+                pass  # Column already exists
         await db.execute("PRAGMA journal_mode=WAL")
         await db.execute("PRAGMA foreign_keys=ON")
         await db.commit()

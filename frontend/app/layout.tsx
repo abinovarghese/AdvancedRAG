@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Advanced RAG",
-  description: "Advanced Retrieval-Augmented Generation with multi-provider support",
+  title: "RAG Forge",
+  description: "Forge your knowledge base with multi-source ingestion and RAG-powered chat",
 };
 
 export default function RootLayout({
